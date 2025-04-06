@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, Variants } from 'framer-motion';
+import { motion, Variants, useAnimationControls } from 'framer-motion';
 import styles from './AIAvatar.module.css';
 
 // Define the viseme map: first letter of text chunk -> mouth shape
@@ -59,11 +59,17 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
   // State for current viseme, current text chunk, and blinking
   const [currentViseme, setCurrentViseme] = useState<Viseme>('X');
   const [isBlinking, setIsBlinking] = useState(false);
+  const [isDistracted, setIsDistracted] = useState(false);
   const [chunkIndex, setChunkIndex] = useState(0);
+  
+  // Animation controls for eye shine
+  const leftEyeShineControls = useAnimationControls();
+  const rightEyeShineControls = useAnimationControls();
   
   // Refs for animation timers
   const blinkIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const visemeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const distractionIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   console.log('AIAvatar render:', { 
     textChunks, 
@@ -94,6 +100,62 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
       if (blinkIntervalRef.current) clearTimeout(blinkIntervalRef.current);
     };
   }, []);
+
+  // Handle random eye distraction animation
+  useEffect(() => {
+    // SVG constants for use within this effect
+    const distEyeWidth = eyeWidth;
+    
+    const scheduleNextDistraction = () => {
+      if (distractionIntervalRef.current) clearTimeout(distractionIntervalRef.current);
+      
+      const nextDistractionDelay = Math.random() * 5000 + 3000; // Random distraction every 3-8 seconds
+      distractionIntervalRef.current = setTimeout(() => {
+        setIsDistracted(true);
+        
+        // Apply slightly different animations to each eye
+        const leftOffset = -distEyeWidth * (0.22 + Math.random() * 0.06);
+        const rightOffset = -distEyeWidth * (0.20 + Math.random() * 0.08);
+        
+        // Animate left eye with specific values
+        leftEyeShineControls.start({ 
+          x: leftOffset,
+          transition: { duration: 0.3, ease: "easeInOut" }
+        });
+        
+        // Animate right eye with slightly different timing
+        rightEyeShineControls.start({ 
+          x: rightOffset,
+          transition: { duration: 0.35, ease: "easeInOut", delay: 0.05 }
+        });
+        
+        // Return to normal position after a delay
+        const distractionDuration = 800 + Math.random() * 200;
+        setTimeout(() => {
+          setIsDistracted(false);
+          
+          // Animate eyes back to normal
+          leftEyeShineControls.start({ 
+            x: 0,
+            transition: { duration: 0.3, ease: "easeInOut" }
+          });
+          
+          rightEyeShineControls.start({ 
+            x: 0,
+            transition: { duration: 0.35, ease: "easeInOut", delay: 0.05 }
+          });
+          
+          scheduleNextDistraction();
+        }, distractionDuration);
+      }, nextDistractionDelay);
+    };
+
+    scheduleNextDistraction();
+    
+    return () => {
+      if (distractionIntervalRef.current) clearTimeout(distractionIntervalRef.current);
+    };
+  }, [leftEyeShineControls, rightEyeShineControls]);
 
   // When isSpeaking changes to false, reset the mouth
   useEffect(() => {
@@ -268,7 +330,7 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
     }
   };
 
-  // Get eye shine position based on emotion
+  // Get eye shine position based on emotion and distraction state
   const getEyeShinePosition = (emotion: EyeEmotion, isLeft: boolean) => {
     const baseX = isLeft ? -eyeOffsetX : eyeOffsetX;
     let offsetX = eyeWidth * 0.2;
@@ -283,6 +345,8 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
       offsetX = 0;
       offsetY = -eyeHeight * 0.2;
     }
+    
+    // Don't apply distraction effect here as we're using motion.animate
     
     return {
       x: baseX + offsetX,
@@ -432,17 +496,19 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
       {/* Eye shine (only when not blinking) */}
       {!isBlinking && (
         <>
-          <circle
+          <motion.circle
             cx={leftShinePos.x}
             cy={leftShinePos.y}
             r={shineSize}
             fill="white"
+            animate={leftEyeShineControls}
           />
-          <circle
+          <motion.circle
             cx={rightShinePos.x}
             cy={rightShinePos.y}
             r={shineSize}
             fill="white"
+            animate={rightEyeShineControls}
           />
         </>
       )}
