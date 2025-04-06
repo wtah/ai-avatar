@@ -190,24 +190,39 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
     
     switch (viseme) {
       case 'A': // Open mouth
-        return `M -${halfWidth} ${y} Q 0 ${y + 10} ${halfWidth} ${y} Q 0 ${y - 10} -${halfWidth} ${y} Z`;
-      case 'B': // Closed mouth
-        return `M -${halfWidth} ${y} H ${halfWidth}`;
+        return `M -${halfWidth} ${y} 
+                C -${halfWidth*0.7} ${y+8}, ${halfWidth*0.7} ${y+8}, ${halfWidth} ${y} 
+                C ${halfWidth*0.7} ${y-8}, -${halfWidth*0.7} ${y-8}, -${halfWidth} ${y} Z`;
+      case 'B': // Closed mouth with lips together
+        return `M -${halfWidth} ${y} 
+                C -${halfWidth*0.6} ${y-1}, ${halfWidth*0.6} ${y-1}, ${halfWidth} ${y}`;
       case 'C': // Slightly open mouth
-        return `M -${halfWidth} ${y} Q 0 ${y + 5} ${halfWidth} ${y} Q 0 ${y - 5} -${halfWidth} ${y} Z`;
+        return `M -${halfWidth} ${y} 
+                C -${halfWidth*0.7} ${y+6}, ${halfWidth*0.7} ${y+6}, ${halfWidth} ${y} 
+                C ${halfWidth*0.7} ${y-4}, -${halfWidth*0.7} ${y-4}, -${halfWidth} ${y} Z`;
       case 'D': // Wide open mouth
-        return `M -${halfWidth} ${y} Q 0 ${y + 15} ${halfWidth} ${y} Q 0 ${y - 15} -${halfWidth} ${y} Z`;
+        return `M -${halfWidth} ${y} 
+                C -${halfWidth*0.7} ${y+16}, ${halfWidth*0.7} ${y+16}, ${halfWidth} ${y} 
+                C ${halfWidth*0.7} ${y-12}, -${halfWidth*0.7} ${y-12}, -${halfWidth} ${y} Z`;
       case 'E': // Smile shape
-        return `M -${halfWidth} ${y} Q 0 ${y + 15} ${halfWidth} ${y}`;
+        return `M -${halfWidth} ${y+3} 
+                C -${halfWidth*0.6} ${y-6}, ${halfWidth*0.6} ${y-6}, ${halfWidth} ${y+3}`;
       case 'F': // Bottom lip touching upper teeth
-        return `M -${halfWidth} ${y} Q 0 ${y + 3} ${halfWidth} ${y} Q 0 ${y + 8} -${halfWidth} ${y} Z`;
+        return `M -${halfWidth} ${y-2} 
+                C -${halfWidth*0.7} ${y-4}, ${halfWidth*0.7} ${y-4}, ${halfWidth} ${y-2}
+                C ${halfWidth*0.7} ${y+7}, -${halfWidth*0.7} ${y+7}, -${halfWidth} ${y-2} Z`;
       case 'G': // Teeth slightly showing
-        return `M -${halfWidth} ${y} Q 0 ${y + 2} ${halfWidth} ${y} Q 0 ${y - 8} -${halfWidth} ${y} Z`;
+        return `M -${halfWidth} ${y-2} 
+                C -${halfWidth*0.7} ${y+4}, ${halfWidth*0.7} ${y+4}, ${halfWidth} ${y-2}
+                C ${halfWidth*0.7} ${y-8}, -${halfWidth*0.7} ${y-8}, -${halfWidth} ${y-2} Z`;
       case 'H': // Rounded lips
-        return `M -${halfWidth/1.5} ${y} Q 0 ${y + 8} ${halfWidth/1.5} ${y} Q 0 ${y - 8} -${halfWidth/1.5} ${y} Z`;
+        return `M -${halfWidth*0.7} ${y} 
+                C -${halfWidth*0.5} ${y+8}, ${halfWidth*0.5} ${y+8}, ${halfWidth*0.7} ${y}
+                C ${halfWidth*0.5} ${y-6}, -${halfWidth*0.5} ${y-6}, -${halfWidth*0.7} ${y} Z`;
       case 'X': // Rest position
       default:
-        return `M -${halfWidth} ${y} Q 0 ${y + 3} ${halfWidth} ${y}`;
+        return `M -${halfWidth} ${y} 
+                C -${halfWidth*0.7} ${y+2}, ${halfWidth*0.7} ${y+2}, ${halfWidth} ${y}`;
     }
   };
 
@@ -305,15 +320,15 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
 
   // Animation variants
   const mouthVariants: Variants = {
-    A: { d: getMouthPath('A'), transition: { duration: 0.15, ease: "easeInOut" } },
-    B: { d: getMouthPath('B'), transition: { duration: 0.15, ease: "easeInOut" } },
-    C: { d: getMouthPath('C'), transition: { duration: 0.15, ease: "easeInOut" } },
-    D: { d: getMouthPath('D'), transition: { duration: 0.15, ease: "easeInOut" } },
-    E: { d: getMouthPath('E'), transition: { duration: 0.15, ease: "easeInOut" } },
-    F: { d: getMouthPath('F'), transition: { duration: 0.15, ease: "easeInOut" } },
-    G: { d: getMouthPath('G'), transition: { duration: 0.15, ease: "easeInOut" } },
-    H: { d: getMouthPath('H'), transition: { duration: 0.15, ease: "easeInOut" } },
-    X: { d: getMouthPath('X'), transition: { duration: 0.15, ease: "easeInOut" } },
+    A: { d: getMouthPath('A'), transition: { duration: 0.2, ease: "easeOut" } },
+    B: { d: getMouthPath('B'), transition: { duration: 0.2, ease: "easeOut" } },
+    C: { d: getMouthPath('C'), transition: { duration: 0.2, ease: "easeOut" } },
+    D: { d: getMouthPath('D'), transition: { duration: 0.2, ease: "easeOut" } },
+    E: { d: getMouthPath('E'), transition: { duration: 0.2, ease: "easeOut" } },
+    F: { d: getMouthPath('F'), transition: { duration: 0.2, ease: "easeOut" } },
+    G: { d: getMouthPath('G'), transition: { duration: 0.2, ease: "easeOut" } },
+    H: { d: getMouthPath('H'), transition: { duration: 0.2, ease: "easeOut" } },
+    X: { d: getMouthPath('X'), transition: { duration: 0.2, ease: "easeOut" } },
   };
 
   // Log the variants to make sure they match the viseme
@@ -439,7 +454,9 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
         animate={currentViseme}
         stroke={color}
         strokeWidth={2}
-        fill="none"
+        fill={currentViseme !== 'B' && currentViseme !== 'E' && currentViseme !== 'X' ? "rgba(0,0,0,0.1)" : "none"}
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
