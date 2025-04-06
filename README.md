@@ -2,10 +2,7 @@
 
 A responsive, interactive React component that creates an animated SVG avatar with real-time speech visualization and customizable emotions.
 
-<!-- 
-Note: To add a demo image, take a screenshot of the avatar in action and save it as:
-public/ai-avatar-demo.png
--->
+![AI Avatar Demo](public/ai-avatar-demo.png)
 
 ## Features
 
