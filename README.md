@@ -7,7 +7,9 @@ A responsive, interactive React component that creates an animated SVG avatar wi
 ## Features
 
 - **Real-time Speech Visualization**: Maps text characters to mouth shapes (visemes) to simulate speech
-- **Eye Animations**: Includes natural blinking and 5 emotional states (neutral, happy, sad, angry, surprised)
+- **Expressive Eyes**: Includes natural blinking, random eye movements, and 5 emotional states (neutral, happy, sad, angry, surprised)
+- **Natural Behavior**: Random eye distraction and occasional smiling when in neutral state for a more lifelike appearance
+- **Stylish Mouth Shapes**: Smooth, geometric mouth animations with appropriate shapes for different phonemes
 - **Fully Customizable**: Control size, color, and animation speed
 - **Lightweight SVG**: Built with Framer Motion for smooth animations
 - **Simple Integration**: Easy to implement in any React project
@@ -66,7 +68,13 @@ The avatar maps each character to a specific mouth shape (viseme) to create a na
 - **Other consonants**: Various appropriate mouth shapes
 - **Punctuation**: Rest position or specific expressions
 
-The eyes blink randomly at natural intervals and can display different emotions based on the `eyeEmotion` prop.
+The eyes feature several natural behaviors:
+- Random blinking at natural intervals
+- Occasional glancing to the side (eye distraction effect)
+- When in neutral emotion and not speaking, random subtle smiles to appear friendly
+- Five emotional states affecting eye shape and eyebrow position
+
+All animations use smooth transitions with cubic Bézier curves for a polished appearance.
 
 ## Demo
 
