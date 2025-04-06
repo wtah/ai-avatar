@@ -175,10 +175,11 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
 
   // SVG Constants
   const viewBoxSize = 100;
-  const eyeOffsetX = 15;
-  const eyeOffsetY = 0;
+  const eyeOffsetX = 20; // Wider spacing for the much larger eyes
+  const eyeOffsetY = -8; // Moved up by 3 more pixels (from -5 to -8)
   const mouthOffsetY = 25;
-  const eyeSize = 10;
+  const eyeWidth = 18;  // Dramatically increased width for puppy-like eyes
+  const eyeHeight = 24; // Dramatically increased height for puppy-like eyes
   const eyeBlinkHeight = 1;
 
   // Get mouth path based on viseme
@@ -214,25 +215,66 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
   const getEyePath = (emotion: EyeEmotion, isLeft: boolean, isBlinking: boolean): string => {
     const x = isLeft ? -eyeOffsetX : eyeOffsetX;
     const y = eyeOffsetY;
-    const r = eyeSize;
+    const width = emotion === 'neutral' ? eyeWidth * 1.25 : eyeWidth; // 25% larger for neutral
+    const height = emotion === 'neutral' ? eyeHeight * 1.25 : eyeHeight; // 25% larger for neutral
     
     if (isBlinking) {
-      return `M ${x - r} ${y} H ${x + r}`; // Simple line for blinking
+      return `M ${x - width/2} ${y} H ${x + width/2}`; // Simple line for blinking
     }
     
+    // Puppy-like eye shapes with different variations based on emotion
     switch (emotion) {
       case 'happy':
-        return `M ${x - r} ${y} Q ${x} ${y - r * 0.5} ${x + r} ${y}`; // Happy curve
+        // Happy puppy eyes - angled brow with straight bottom (formerly angry)
+        return `M ${x - width/2} ${y} 
+                Q ${x - width*0.2} ${y - height*0.6} ${x} ${y - height*0.2}
+                Q ${x + width*0.2} ${y - height*0.6} ${x + width/2} ${y}
+                L ${x - width/2} ${y} Z`;
       case 'sad':
-        return `M ${x - r} ${y} Q ${x} ${y + r * 0.5} ${x + r} ${y}`; // Sad curve
+        // Sad puppy eyes - looking downward at the floor
+        return `M ${x - width/2} ${y} 
+                Q ${x} ${y - height*0.5} ${x + width/2} ${y}
+                Q ${x} ${y + height*0.6} ${x - width/2} ${y} Z`;
       case 'angry':
-        return `M ${x - r} ${y} Q ${x} ${y + r * 0.3} ${x + r} ${y}`;
+        // Angry puppy eyes - big with uplifted bottom (formerly happy)
+        return `M ${x - width/2} ${y - height*0.2} 
+                Q ${x} ${y - height*0.8} ${x + width/2} ${y - height*0.2}
+                Q ${x} ${y + height*0.35} ${x - width/2} ${y - height*0.2} Z`;
       case 'surprised':
-        return `M ${x} ${y} m -${r * 1.2}, 0 a ${r * 1.2},${r * 1.2} 0 1,0 ${r * 2.4},0 a ${r * 1.2},${r * 1.2} 0 1,0 -${r * 2.4},0`; // Larger circle
+        // Surprised puppy eyes - very round and large
+        return `M ${x - width*0.7} ${y - height*0.4}
+                Q ${x} ${y - height*0.9} ${x + width*0.7} ${y - height*0.4}
+                Q ${x + width*0.8} ${y + height*0.3} ${x} ${y + height*0.5}
+                Q ${x - width*0.8} ${y + height*0.3} ${x - width*0.7} ${y - height*0.4} Z`;
       case 'neutral':
       default:
-        return `M ${x} ${y} m -${r}, 0 a ${r},${r} 0 1,0 ${r * 2},0 a ${r},${r} 0 1,0 -${r * 2},0`; // Circle
+        // Neutral eyes - same as angry but 25% larger
+        return `M ${x - width/2} ${y - height*0.2} 
+                Q ${x} ${y - height*0.8} ${x + width/2} ${y - height*0.2}
+                Q ${x} ${y + height*0.35} ${x - width/2} ${y - height*0.2} Z`;
     }
+  };
+
+  // Get eye shine position based on emotion
+  const getEyeShinePosition = (emotion: EyeEmotion, isLeft: boolean) => {
+    const baseX = isLeft ? -eyeOffsetX : eyeOffsetX;
+    let offsetX = eyeWidth * 0.2;
+    let offsetY = -eyeHeight * 0.2;
+    
+    // Adjust shine position based on emotion to enhance the effect
+    if (emotion === 'sad') {
+      // For sad, move shine to lower part of eye but ensure it stays within eye boundary
+      offsetY = eyeHeight * 0.15; // Reduced from 0.3 to 0.15 to keep it higher in the eye
+    } else if (emotion === 'surprised') {
+      // For surprised, move shine higher and more centered
+      offsetX = eyeWidth * 0.1;
+      offsetY = -eyeHeight * 0.3;
+    }
+    
+    return {
+      x: baseX + offsetX,
+      y: eyeOffsetY + offsetY
+    };
   };
 
   // Animation variants
@@ -252,6 +294,7 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
   console.log('Mouth variants keys:', Object.keys(mouthVariants));
   console.log('Current viseme to animate:', currentViseme);
 
+  // Eye variants
   const leftEyeVariants: Variants = {
     normal: { 
       d: getEyePath(eyeEmotion, true, false),
@@ -274,6 +317,10 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
     }
   };
 
+  // Get eye shine positions
+  const leftShinePos = getEyeShinePosition(eyeEmotion, true);
+  const rightShinePos = getEyeShinePosition(eyeEmotion, false);
+
   return (
     <svg
       width={size}
@@ -288,17 +335,35 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
         variants={leftEyeVariants}
         animate={isBlinking ? 'blinking' : 'normal'}
         stroke={color}
-        strokeWidth={2}
-        fill="none"
+        strokeWidth={1.5}
+        fill={color}
       />
       <motion.path
         className={styles.eye}
         variants={rightEyeVariants}
         animate={isBlinking ? 'blinking' : 'normal'}
         stroke={color}
-        strokeWidth={2}
-        fill="none"
+        strokeWidth={1.5}
+        fill={color}
       />
+      
+      {/* Eye shine (only when not blinking) */}
+      {!isBlinking && (
+        <>
+          <circle
+            cx={leftShinePos.x}
+            cy={leftShinePos.y}
+            r={eyeWidth*0.15}
+            fill="white"
+          />
+          <circle
+            cx={rightShinePos.x}
+            cy={rightShinePos.y}
+            r={eyeWidth*0.15}
+            fill="white"
+          />
+        </>
+      )}
 
       {/* Mouth */}
       <motion.path
