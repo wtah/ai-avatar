@@ -1,0 +1,22 @@
+/* src/components/AIAvatar.module.css */
+/* Simple styling for minimal AI Avatar */
+
+.avatar {
+  display: inline-block;
+  vertical-align: middle;
+  overflow: visible;
+}
+
+.eye {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transform-origin: center center;
+}
+
+.mouth {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transform-origin: center center;
+} 
