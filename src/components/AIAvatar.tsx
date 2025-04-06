@@ -215,8 +215,8 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
   const getEyePath = (emotion: EyeEmotion, isLeft: boolean, isBlinking: boolean): string => {
     const x = isLeft ? -eyeOffsetX : eyeOffsetX;
     const y = eyeOffsetY;
-    const width = emotion === 'neutral' ? eyeWidth * 1.25 : eyeWidth; // 25% larger for neutral
-    const height = emotion === 'neutral' ? eyeHeight * 1.25 : eyeHeight; // 25% larger for neutral
+    const width = (emotion === 'neutral' || emotion === 'surprised') ? eyeWidth * 1.25 : eyeWidth; // Same size for neutral and surprised
+    const height = (emotion === 'neutral' || emotion === 'surprised') ? eyeHeight * 1.25 : eyeHeight; // Same size for neutral and surprised
     
     if (isBlinking) {
       return `M ${x - width/2} ${y} H ${x + width/2}`; // Simple line for blinking
@@ -241,11 +241,9 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
                 Q ${x} ${y - height*0.8} ${x + width/2} ${y - height*0.2}
                 Q ${x} ${y + height*0.35} ${x - width/2} ${y - height*0.2} Z`;
       case 'surprised':
-        // Surprised puppy eyes - very round and large
-        return `M ${x - width*0.7} ${y - height*0.4}
-                Q ${x} ${y - height*0.9} ${x + width*0.7} ${y - height*0.4}
-                Q ${x + width*0.8} ${y + height*0.3} ${x} ${y + height*0.5}
-                Q ${x - width*0.8} ${y + height*0.3} ${x - width*0.7} ${y - height*0.4} Z`;
+        // Surprised eyes - perfect circles with same size as neutral
+        const radius = Math.min(width, height) / 2; // Use smallest dimension for perfect circle
+        return `M ${x} ${y} m -${radius}, 0 a ${radius},${radius} 0 1,0 ${radius*2},0 a ${radius},${radius} 0 1,0 -${radius*2},0`; // Circle
       case 'neutral':
       default:
         // Neutral eyes - same as angry but 25% larger
@@ -266,15 +264,43 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
       // For sad, move shine to lower part of eye but ensure it stays within eye boundary
       offsetY = eyeHeight * 0.15; // Reduced from 0.3 to 0.15 to keep it higher in the eye
     } else if (emotion === 'surprised') {
-      // For surprised, move shine higher and more centered
-      offsetX = eyeWidth * 0.1;
-      offsetY = -eyeHeight * 0.3;
+      // For surprised, center the shine with slight upward position
+      offsetX = 0;
+      offsetY = -eyeHeight * 0.2;
     }
     
     return {
       x: baseX + offsetX,
       y: eyeOffsetY + offsetY
     };
+  };
+
+  // Get eye shine size based on emotion
+  const getEyeShineSize = (emotion: EyeEmotion): number => {
+    // Make shine 30% larger for surprised emotion
+    return emotion === 'surprised' ? eyeWidth * 0.195 : eyeWidth * 0.15;
+  };
+
+  // Get eyebrow path for angry emotion
+  const getAngryEyebrowPath = (isLeft: boolean): string => {
+    const x = isLeft ? -eyeOffsetX : eyeOffsetX;
+    const y = eyeOffsetY - eyeHeight * 0.6; // Position above the eye
+    const width = eyeWidth * 0.9; // Shorter eyebrows
+    
+    // Angled eyebrow - flipped direction (creates a "/\" shape)
+    return isLeft
+      ? `M ${x - width/2} ${y - width*0.3} L ${x + width/2} ${y}` // Left eyebrow angled up inward
+      : `M ${x - width/2} ${y} L ${x + width/2} ${y - width*0.3}`; // Right eyebrow angled up outward
+  };
+
+  // Get eyebrow path for surprised emotion
+  const getSurprisedEyebrowPath = (isLeft: boolean): string => {
+    const x = isLeft ? -eyeOffsetX : eyeOffsetX;
+    const y = eyeOffsetY - eyeHeight * 1.1; // Position even higher above the eye
+    const width = eyeWidth * 1.3; // Even wider eyebrows for more surprise
+    
+    // Curved high eyebrows for surprised expression
+    return `M ${x - width/2} ${y} Q ${x} ${y - width*0.4} ${x + width/2} ${y}`; // More pronounced upward curve
   };
 
   // Animation variants
@@ -317,9 +343,10 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
     }
   };
 
-  // Get eye shine positions
+  // Get eye shine positions and size
   const leftShinePos = getEyeShinePosition(eyeEmotion, true);
   const rightShinePos = getEyeShinePosition(eyeEmotion, false);
+  const shineSize = getEyeShineSize(eyeEmotion);
 
   return (
     <svg
@@ -329,6 +356,46 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
       xmlns="http://www.w3.org/2000/svg"
       className={styles.avatar}
     >
+      {/* Angry Eyebrows - only show for angry emotion */}
+      {eyeEmotion === 'angry' && !isBlinking && (
+        <>
+          <path
+            d={getAngryEyebrowPath(true)}
+            stroke={color}
+            strokeWidth={2.5}
+            strokeLinecap="round"
+            fill="none"
+          />
+          <path
+            d={getAngryEyebrowPath(false)}
+            stroke={color}
+            strokeWidth={2.5}
+            strokeLinecap="round"
+            fill="none"
+          />
+        </>
+      )}
+      
+      {/* Surprised Eyebrows - only show for surprised emotion */}
+      {eyeEmotion === 'surprised' && !isBlinking && (
+        <>
+          <path
+            d={getSurprisedEyebrowPath(true)}
+            stroke={color}
+            strokeWidth={2}
+            strokeLinecap="round"
+            fill="none"
+          />
+          <path
+            d={getSurprisedEyebrowPath(false)}
+            stroke={color}
+            strokeWidth={2}
+            strokeLinecap="round"
+            fill="none"
+          />
+        </>
+      )}
+      
       {/* Eyes */}
       <motion.path
         className={styles.eye}
@@ -353,13 +420,13 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
           <circle
             cx={leftShinePos.x}
             cy={leftShinePos.y}
-            r={eyeWidth*0.15}
+            r={shineSize}
             fill="white"
           />
           <circle
             cx={rightShinePos.x}
             cy={rightShinePos.y}
-            r={eyeWidth*0.15}
+            r={shineSize}
             fill="white"
           />
         </>
