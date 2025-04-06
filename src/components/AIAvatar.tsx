@@ -56,10 +56,11 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
   size = 200,
   color = '#000000',
 }) => {
-  // State for current viseme, current text chunk, and blinking
+  // State for current viseme, current text chunk, and animations
   const [currentViseme, setCurrentViseme] = useState<Viseme>('X');
   const [isBlinking, setIsBlinking] = useState(false);
   const [isDistracted, setIsDistracted] = useState(false);
+  const [isSmiling, setIsSmiling] = useState(false);
   const [chunkIndex, setChunkIndex] = useState(0);
   
   // Animation controls for eye shine
@@ -70,6 +71,7 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
   const blinkIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const visemeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const distractionIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const smileIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   console.log('AIAvatar render:', { 
     textChunks, 
@@ -156,6 +158,39 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
       if (distractionIntervalRef.current) clearTimeout(distractionIntervalRef.current);
     };
   }, [leftEyeShineControls, rightEyeShineControls]);
+
+  // Handle random smile animation for neutral emotion
+  useEffect(() => {
+    // Only do random smiles in neutral emotion and when not speaking
+    if (eyeEmotion !== 'neutral') {
+      return;
+    }
+    
+    const scheduleNextSmile = () => {
+      if (smileIntervalRef.current) clearTimeout(smileIntervalRef.current);
+      
+      const nextSmileDelay = Math.random() * 6000 + 5000; // Random smile every 5-11 seconds
+      smileIntervalRef.current = setTimeout(() => {
+        // Only smile if not already speaking (would interfere with visemes)
+        if (!isSpeaking) {
+          setIsSmiling(true);
+          setTimeout(() => {
+            setIsSmiling(false);
+            scheduleNextSmile();
+          }, 1200 + Math.random() * 800); // Smile for 1.2-2 seconds
+        } else {
+          // If speaking, just reschedule
+          scheduleNextSmile();
+        }
+      }, nextSmileDelay);
+    };
+
+    scheduleNextSmile();
+    
+    return () => {
+      if (smileIntervalRef.current) clearTimeout(smileIntervalRef.current);
+    };
+  }, [eyeEmotion, isSpeaking]);
 
   // When isSpeaking changes to false, reset the mouth
   useEffect(() => {
@@ -266,9 +301,9 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
         return `M -${halfWidth} ${y} 
                 C -${halfWidth*0.7} ${y+16}, ${halfWidth*0.7} ${y+16}, ${halfWidth} ${y} 
                 C ${halfWidth*0.7} ${y-12}, -${halfWidth*0.7} ${y-12}, -${halfWidth} ${y} Z`;
-      case 'E': // Smile shape
-        return `M -${halfWidth} ${y+3} 
-                C -${halfWidth*0.6} ${y-6}, ${halfWidth*0.6} ${y-6}, ${halfWidth} ${y+3}`;
+      case 'E': // Smile shape - upward curve for a proper smile
+        return `M -${halfWidth} ${y-1} 
+                Q 0 ${y+12}, ${halfWidth} ${y-1}`;
       case 'F': // Bottom lip touching upper teeth
         return `M -${halfWidth} ${y-2} 
                 C -${halfWidth*0.7} ${y-4}, ${halfWidth*0.7} ${y-4}, ${halfWidth} ${y-2}
@@ -382,6 +417,15 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
     return `M ${x - width/2} ${y} Q ${x} ${y - width*0.4} ${x + width/2} ${y}`; // More pronounced upward curve
   };
 
+  // Modified mouth rendering logic
+  // Get the effective viseme based on speaking and smiling states
+  const getEffectiveViseme = (): Viseme => {
+    if (isSmiling && !isSpeaking && eyeEmotion === 'neutral') {
+      return 'E'; // Use the smile viseme
+    }
+    return currentViseme;
+  };
+
   // Animation variants
   const mouthVariants: Variants = {
     A: { d: getMouthPath('A'), transition: { duration: 0.2, ease: "easeOut" } },
@@ -426,6 +470,8 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
   const leftShinePos = getEyeShinePosition(eyeEmotion, true);
   const rightShinePos = getEyeShinePosition(eyeEmotion, false);
   const shineSize = getEyeShineSize(eyeEmotion);
+
+  const effectiveViseme = getEffectiveViseme();
 
   return (
     <svg
@@ -517,10 +563,12 @@ const AIAvatar: React.FC<AIAvatarProps> = ({
       <motion.path
         className={styles.mouth}
         variants={mouthVariants}
-        animate={currentViseme}
+        animate={effectiveViseme}
         stroke={color}
         strokeWidth={2}
-        fill={currentViseme !== 'B' && currentViseme !== 'E' && currentViseme !== 'X' ? "rgba(0,0,0,0.1)" : "none"}
+        fill={effectiveViseme !== 'B' && effectiveViseme !== 'X' ? 
+              effectiveViseme === 'E' ? "rgba(0,0,0,0.05)" : "rgba(0,0,0,0.1)" 
+              : "none"}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
