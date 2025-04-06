@@ -175,7 +175,9 @@ function App() {
           boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
           backdropFilter: 'blur(5px)',
           display: 'flex',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          width: '100%',
+          maxWidth: '500px'
         }}
       >
         <AIAvatar 
@@ -188,7 +190,7 @@ function App() {
       </div>
 
       {/* Speaking status */}
-      <div style={{ marginBottom: '20px' }}>
+      <div style={{ marginBottom: '20px', width: '100%', display: 'flex', justifyContent: 'center' }}>
         <span style={{
           display: 'inline-block',
           padding: '5px 10px',
@@ -202,7 +204,7 @@ function App() {
       </div>
 
       {/* Emotion controls */}
-      <div style={{ marginBottom: '20px' }}>
+      <div style={{ marginBottom: '20px', width: '100%', maxWidth: '500px' }}>
         <h3>Eye Emotions</h3>
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <button 
@@ -254,7 +256,7 @@ function App() {
       </div>
 
       {/* Color picker */}
-      <div style={{ marginBottom: '20px' }}>
+      <div style={{ marginBottom: '20px', width: '100%', maxWidth: '500px' }}>
         <h3>Color</h3>
         <input
           type="color"
@@ -265,9 +267,9 @@ function App() {
       </div>
 
       {/* Text input */}
-      <div style={{ marginBottom: '20px' }}>
+      <div style={{ marginBottom: '20px', width: '100%', maxWidth: '500px' }}>
         <h3>Type to Speak</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', width: '100%' }}>
           <textarea
             value={inputText}
             onChange={handleTextChange}
@@ -315,7 +317,7 @@ function App() {
       </div>
 
       {/* Viseme explanation */}
-      <div style={{ fontSize: '0.9rem', maxWidth: '600px', margin: '0 auto', textAlign: 'left' }}>
+      <div style={{ fontSize: '0.9rem', maxWidth: '500px', margin: '0 auto', textAlign: 'left', width: '100%' }}>
         <h3>How it works:</h3>
         <p>
           Simply start typing in the text box above, and the avatar will speak as you type.
